@@ -1,0 +1,3 @@
+def calculate_ema(data, period=20):
+    ...
+    return data
