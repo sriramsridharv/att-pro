@@ -16,41 +16,35 @@ class IndicatorEngine:
         pass
 
     def calculate_indicators(self, df: pd.DataFrame):
-
         """
         Calculate all technical indicators.
-
-        Parameters
-        ----------
-        df : pandas.DataFrame
-
-        Returns
-        -------
-        pandas.DataFrame
         """
 
         data = df.copy()
 
         # ----------------------------
+        # Handle MultiIndex columns
+        # ----------------------------
+        if isinstance(data.columns, pd.MultiIndex):
+            data.columns = data.columns.get_level_values(0)
+
+        data = data.loc[:, ~data.columns.duplicated()]
+
+        # ----------------------------
         # EMA
         # ----------------------------
-
         data["EMA20"] = data["Close"].ewm(span=20).mean()
-
         data["EMA50"] = data["Close"].ewm(span=50).mean()
 
         # ----------------------------
         # RSI (14)
         # ----------------------------
-
         delta = data["Close"].diff()
 
         gain = delta.clip(lower=0)
-
         loss = -delta.clip(upper=0)
 
         avg_gain = gain.rolling(14).mean()
-
         avg_loss = loss.rolling(14).mean()
 
         rs = avg_gain / avg_loss
@@ -60,7 +54,6 @@ class IndicatorEngine:
         # ----------------------------
         # Average Volume
         # ----------------------------
-
         data["AvgVolume20"] = data["Volume"].rolling(20).mean()
 
         data["VolumeRatio"] = (
@@ -70,7 +63,6 @@ class IndicatorEngine:
         # ----------------------------
         # ATR (14)
         # ----------------------------
-
         high_low = data["High"] - data["Low"]
 
         high_close = (

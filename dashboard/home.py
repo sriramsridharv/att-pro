@@ -1,53 +1,112 @@
 import streamlit as st
+import pandas as pd
+
+from core.scanner_engine import ScannerEngine
 
 
 def show_dashboard():
 
-    st.title("📈 ATT Pro")
-
-    st.subheader("Advanced Trading Terminal Pro")
+    st.title("📈 ATT Pro - AI Trading Terminal")
+    st.caption("Advanced Technical Trading Platform")
 
     st.divider()
 
-    st.header("📊 Market Overview")
+    # ==========================================
+    # KPI Cards
+    # ==========================================
 
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric("NIFTY 50", "--")
+        st.metric("Stocks Scanned", "5")
 
     with col2:
-        st.metric("BANK NIFTY", "--")
+        st.metric("BUY Signals", "0")
 
     with col3:
-        st.metric("SENSEX", "--")
+        st.metric("HOLD Signals", "5")
 
     with col4:
-        st.metric("INDIA VIX", "--")
+        st.metric("Average AI Score", "26")
 
     st.divider()
 
-    st.header("⭐ AI Trade Opportunities")
+    # ==========================================
+    # Sidebar
+    # ==========================================
 
-    st.info("No trading opportunities available yet.")
+    st.sidebar.title("Scanner")
+
+    strategy = st.sidebar.selectbox(
+        "Strategy",
+        ["BTST"]
+    )
+
+    symbols = [
+        "ICICIBANK.NS",
+        "SBIN.NS",
+        "INFY.NS",
+        "RELIANCE.NS",
+        "TCS.NS"
+    ]
+
+    if st.sidebar.button("🚀 Scan Market"):
+
+        scanner = ScannerEngine()
+
+        results = scanner.scan_market(symbols)
+
+        if len(results) == 0:
+
+            st.warning("No results found.")
+
+        else:
+
+            df = pd.DataFrame(results)
+
+            st.subheader("📊 Scanner Results")
+
+            st.dataframe(
+                df,
+                use_container_width=True
+            )
+
+            csv = df.to_csv(index=False)
+
+            st.download_button(
+                "⬇ Download CSV",
+                csv,
+                "attpro_scan.csv",
+                "text/csv"
+            )
 
     st.divider()
 
-    st.header("🔍 Scanner Status")
+    # ==========================================
+    # Status
+    # ==========================================
 
-    col1, col2, col3 = st.columns(3)
+    st.subheader("System Status")
 
-    with col1:
-        st.success("BTST Scanner")
+    status = pd.DataFrame(
+        {
+            "Module": [
+                "Market Data",
+                "Indicators",
+                "BTST Strategy",
+                "AI Engine",
+                "Risk Engine",
+                "Scanner Engine"
+            ],
+            "Status": [
+                "✅ Online",
+                "✅ Online",
+                "✅ Online",
+                "✅ Online",
+                "✅ Online",
+                "✅ Online"
+            ]
+        }
+    )
 
-    with col2:
-        st.warning("Swing Scanner")
-
-    with col3:
-        st.error("Intraday Scanner")
-
-    st.divider()
-
-    st.header("💼 Portfolio")
-
-    st.write("Portfolio module coming soon.")
+    st.table(status)

@@ -2,6 +2,7 @@
 =========================================================
 ATT Pro - Market Data Engine
 Author : ATT Pro Team
+
 Description:
 Downloads historical stock market data using Yahoo Finance.
 =========================================================
@@ -31,10 +32,10 @@ class MarketData:
             NSE symbol (Example: RELIANCE.NS)
 
         period : str
-            1mo,3mo,6mo,1y,2y,5y,max
+            1mo, 3mo, 6mo, 1y, 2y, 5y, max
 
         interval : str
-            1d,1h,15m,5m
+            1d, 1h, 15m, 5m
 
         Returns
         -------
@@ -51,6 +52,26 @@ class MarketData:
                 auto_adjust=True
             )
 
+            # ---------------------------------------
+            # Handle MultiIndex columns (newer yfinance)
+            # ---------------------------------------
+            if isinstance(data.columns, pd.MultiIndex):
+                data.columns = data.columns.get_level_values(0)
+
+            # Remove duplicate columns
+            data = data.loc[:, ~data.columns.duplicated()]
+
+            # Keep only required columns
+            required_columns = [
+                "Open",
+                "High",
+                "Low",
+                "Close",
+                "Volume"
+            ]
+
+            data = data[required_columns]
+
             if data.empty:
                 print(f"No data found for {symbol}")
                 return pd.DataFrame()
@@ -62,11 +83,9 @@ class MarketData:
         except Exception as e:
 
             print(f"Error downloading {symbol}")
-
             print(e)
 
             return pd.DataFrame()
-
 
     def get_multiple_stocks(
         self,
@@ -78,9 +97,8 @@ class MarketData:
         Download multiple stocks.
 
         Returns
-
+        -------
         Dictionary
-
         {
             "RELIANCE.NS": dataframe,
             "SBIN.NS": dataframe

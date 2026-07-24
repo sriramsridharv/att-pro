@@ -1,4 +1,4 @@
-    import streamlit as st
+import streamlit as st
 from dashboard.home import show_dashboard
 
 st.set_page_config(
@@ -42,5 +42,5 @@ elif page == "Reports":
     st.info("Coming Soon")
 
 elif page == "Settings":
-    st.title("⚙ Settings")
+    st.title("⚙️ Settings")
     st.info("Coming Soon")
