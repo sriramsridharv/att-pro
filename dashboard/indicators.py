@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+from streamlit.components.v1 import html
 
 from data.market_data import MarketData
 from core.indicator_engine import IndicatorEngine
@@ -195,6 +196,15 @@ def show_indicators():
                 margin=dict(l=10, r=10, t=35, b=10),
             )
             st.plotly_chart(volume_fig, use_container_width=True)
+
+        st.divider()
+        st.subheader("TradingView Chart")
+        tradingview_symbol = symbol.replace(".NS", ":NSE/")
+        tradingview_embed = (
+            f"<iframe src=\"https://s.tradingview.com/widgetembed/?frameElementId=tradingview_1&symbol={tradingview_symbol}&interval=60&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=[]&theme=light&style=1&timezone=Etc%2FUTC&studies_overrides=%7B%7D&overrides=%7B%7D&enabled_features=%5B%5D&disabled_features=%5B%5D&locale=en\" "
+            "width=100% height=610 frameborder=0 allowfullscreen></iframe>"
+        )
+        html(tradingview_embed, height=620)
 
         with st.expander("Show raw indicator data"):
             st.dataframe(df.tail(20), use_container_width=True)
