@@ -75,6 +75,7 @@ class ScannerEngine:
                     "Rating": ai_result["Rating"],
                     "Reasons": ai_result["Reasons"],
                     "Entry": trade_plan["Entry"],
+                    "Price": trade_plan["Entry"],
                     "Stop Loss": trade_plan["Stop Loss"],
                     "Target 1": trade_plan["Target 1"],
                     "Target 2": trade_plan["Target 2"],

@@ -1,5 +1,7 @@
+import re
 import streamlit as st
 import pandas as pd
+from pathlib import Path
 
 from core.scanner_engine import ScannerEngine
 
@@ -63,6 +65,9 @@ def make_streamlit_safe(results):
     if "Reasons" in df.columns:
         df["Reasons"] = df["Reasons"].apply(format_reasons)
 
+    if "Price" in df.columns and "Price Range" not in df.columns:
+        df["Price Range"] = df["Price"].apply(lambda p: price_range_label(float(p)) if pd.notnull(p) else "N/A")
+
     for column in df.columns:
         if df[column].dtype == "object":
             df[column] = df[column].apply(
@@ -70,6 +75,28 @@ def make_streamlit_safe(results):
             )
 
     return df
+
+
+def load_symbol_file(path="data/symbols.txt"):
+    file_path = Path(path)
+    if not file_path.exists():
+        return []
+
+    symbols = []
+    for line in file_path.read_text().splitlines():
+        trimmed = line.strip().upper()
+        if trimmed and not trimmed.startswith("#"):
+            symbols.append(trimmed)
+
+    return symbols
+
+
+def parse_symbol_list(text):
+    if not text:
+        return []
+
+    parts = re.split(r"[\n,;]+", text)
+    return [item.strip().upper() for item in parts if item.strip()]
 
 
 def filter_buy_candidates(results):
@@ -84,69 +111,144 @@ def filter_buy_candidates(results):
     ]
 
 
+def price_range_label(price):
+    if price <= 300:
+        return "1 - 300"
+    if price <= 600:
+        return "301 - 600"
+    if price <= 900:
+        return "601 - 900"
+    return "> 900"
+
+
+def filter_results_by_price_range(results, selected_range):
+    if selected_range == "All":
+        return results
+
+    def price_in_range(item):
+        price = item.get("Price")
+        if price is None:
+            price = item.get("Entry")
+        try:
+            price = float(price)
+        except (TypeError, ValueError):
+            return False
+
+        if selected_range == "1 - 300":
+            return price <= 300
+        if selected_range == "301 - 600":
+            return 300 < price <= 600
+        if selected_range == "601 - 900":
+            return 600 < price <= 900
+        if selected_range == "> 900":
+            return price > 900
+        return True
+
+    return [item for item in results if price_in_range(item)]
+
+
+def sort_results(results, sort_key, ascending=True):
+    if not results or sort_key is None:
+        return results
+
+    def sort_value(item):
+        value = item.get(sort_key)
+        if sort_key in ["AI Score", "Price"]:
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return float("-inf") if ascending else float("inf")
+        if value is None:
+            return ""
+        return str(value)
+
+    return sorted(results, key=sort_value, reverse=not ascending)
+
+
 def show_scanner():
     st.title("🔍 ATT Pro Scanner")
     st.caption("AI-assisted stock scanner powered by technical rules")
 
     st.sidebar.title("Scanner Options")
 
-    default_symbols = [
-        "ADANIPORTS.NS",
-        "ASIANPAINT.NS",
-        "AXISBANK.NS",
-        "BAJAJ-AUTO.NS",
-        "BAJFINANCE.NS",
-        "BAJAJFINSV.NS",
-        "BPCL.NS",
-        "BHARTIARTL.NS",
-        "BRITANNIA.NS",
-        "CIPLA.NS",
-        "COALINDIA.NS",
-        "DIVISLAB.NS",
-        "DRREDDY.NS",
-        "EICHERMOT.NS",
-        "GRASIM.NS",
-        "HCLTECH.NS",
-        "HDFC.NS",
-        "HDFCBANK.NS",
-        "HDFCLIFE.NS",
-        "HEROMOTOCO.NS",
-        "HINDALCO.NS",
-        "HINDUNILVR.NS",
-        "ICICIBANK.NS",
-        "ITC.NS",
-        "INDUSINDBK.NS",
-        "INFY.NS",
-        "JSWSTEEL.NS",
-        "KOTAKBANK.NS",
-        "LT.NS",
-        "M&M.NS",
-        "MARUTI.NS",
-        "NESTLEIND.NS",
-        "NTPC.NS",
-        "ONGC.NS",
-        "POWERGRID.NS",
-        "RELIANCE.NS",
-        "SBILIFE.NS",
-        "SBIN.NS",
-        "SUNPHARMA.NS",
-        "TCS.NS",
-        "TATACHEM.NS",
-        "TATACONSUM.NS",
-        "TATASTEEL.NS",
-        "TECHM.NS",
-        "TITAN.NS",
-        "ULTRACEMCO.NS",
-        "UPL.NS",
-        "WIPRO.NS",
-        "ZEEL.NS",
-    ]
+    default_symbols = load_symbol_file("data/symbols.txt")
+
+    symbol_groups = {
+        "NIFTY50": [
+            "ADANIPORTS.NS",
+            "ASIANPAINT.NS",
+            "AXISBANK.NS",
+            "BAJAJ-AUTO.NS",
+            "BAJFINANCE.NS",
+            "BAJAJFINSV.NS",
+            "BPCL.NS",
+            "BHARTIARTL.NS",
+            "BRITANNIA.NS",
+            "CIPLA.NS",
+            "COALINDIA.NS",
+            "DIVISLAB.NS",
+            "DRREDDY.NS",
+            "EICHERMOT.NS",
+            "GRASIM.NS",
+            "HCLTECH.NS",
+            "HDFC.NS",
+            "HDFCBANK.NS",
+            "HDFCLIFE.NS",
+            "HEROMOTOCO.NS",
+            "HINDALCO.NS",
+            "HINDUNILVR.NS",
+            "ICICIBANK.NS",
+            "ITC.NS",
+            "INDUSINDBK.NS",
+            "INFY.NS",
+            "JSWSTEEL.NS",
+            "KOTAKBANK.NS",
+            "LT.NS",
+            "M&M.NS",
+            "MARUTI.NS",
+            "NESTLEIND.NS",
+            "NTPC.NS",
+            "ONGC.NS",
+            "POWERGRID.NS",
+            "RELIANCE.NS",
+            "SBILIFE.NS",
+            "SBIN.NS",
+            "SUNPHARMA.NS",
+            "TCS.NS",
+            "TATACHEM.NS",
+            "TATACONSUM.NS",
+            "TATASTEEL.NS",
+            "TECHM.NS",
+            "TITAN.NS",
+            "ULTRACEMCO.NS",
+            "UPL.NS",
+            "WIPRO.NS",
+            "ZEEL.NS",
+        ],
+        "Extended Universe": default_symbols,
+    }
+
+    if "custom_symbol_groups" not in st.session_state:
+        st.session_state["custom_symbol_groups"] = {}
+
+    combined_groups = {**symbol_groups, **st.session_state["custom_symbol_groups"]}
 
     if "scan_symbols" not in st.session_state:
-        st.session_state["scan_symbols"] = default_symbols[:10]
+        st.session_state["scan_symbols"] = combined_groups["NIFTY50"][:10]
 
-    if st.sidebar.button("Select all NIFTY50 symbols"):
-        st.session_state["scan_symbols"] = default_symbols
+    st.sidebar.write(f"Universe loaded: {len(default_symbols)} symbols")
+
+    group_selection = st.sidebar.selectbox(
+        "Symbol group",
+        list(combined_groups.keys()),
+        index=0,
+    )
+
+    if st.sidebar.button("Load selected group"):
+        st.session_state["scan_symbols"] = combined_groups[group_selection]
+
+    if st.sidebar.button("Select all loaded symbols"):
+        st.session_state["scan_symbols"] = combined_groups[group_selection]
 
     symbols = st.sidebar.multiselect(
         "Symbols to scan",
@@ -154,6 +256,29 @@ def show_scanner():
         default=st.session_state["scan_symbols"],
         key="scan_symbols",
     )
+
+    with st.sidebar.expander("Custom symbol groups"):
+        custom_group_name = st.text_input(
+            "Group name",
+            placeholder="My Watchlist",
+            key="custom_group_name",
+        )
+        custom_group_symbols = st.text_area(
+            "Symbols (comma/newline separated)",
+            placeholder="TCS.NS, RELIANCE.NS, HDFC.NS",
+            key="custom_group_symbols",
+            height=120,
+        )
+
+        if st.button("Save custom group", key="save_custom_group"):
+            parsed = parse_symbol_list(custom_group_symbols)
+            if not custom_group_name.strip():
+                st.sidebar.warning("Enter a valid group name before saving.")
+            elif not parsed:
+                st.sidebar.warning("Enter at least one symbol for the custom group.")
+            else:
+                st.session_state["custom_symbol_groups"][custom_group_name.strip()] = parsed
+                st.sidebar.success(f"Saved custom group: {custom_group_name.strip()}")
 
     custom_symbol = st.sidebar.text_input(
         "Add custom symbol",
@@ -193,6 +318,24 @@ def show_scanner():
         "Use the scanner to evaluate selected NSE stocks against the BTST strategy."
     )
 
+    price_range = st.sidebar.selectbox(
+        "Price range",
+        ["All", "1 - 300", "301 - 600", "601 - 900", "> 900"],
+        index=0,
+    )
+
+    sort_key = st.sidebar.selectbox(
+        "Sort results by",
+        ["AI Score", "Price", "Symbol"],
+        index=0,
+    )
+
+    sort_order = st.sidebar.selectbox(
+        "Sort order",
+        ["Descending", "Ascending"],
+        index=0,
+    )
+
     show_buy_candidates = st.sidebar.checkbox(
         "Show only stocks meeting all conditions",
         value=True,
@@ -224,6 +367,13 @@ def show_scanner():
         if not results:
             st.warning("No stocks met the selected condition set.")
             return
+
+        results = filter_results_by_price_range(results, price_range)
+        results = sort_results(
+            results,
+            sort_key,
+            ascending=(sort_order == "Ascending"),
+        )
 
         df = make_streamlit_safe(results)
 
