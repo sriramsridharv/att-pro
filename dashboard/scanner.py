@@ -58,6 +58,18 @@ def make_streamlit_safe(results):
     return df
 
 
+def filter_buy_candidates(results):
+    """
+    Return only results where all BTST conditions passed.
+    """
+    return [
+        item
+        for item in results
+        if isinstance(item.get("Signal"), str)
+        and item.get("Signal").upper() == "BUY"
+    ]
+
+
 def show_scanner():
     st.title("🔍 ATT Pro Scanner")
     st.caption("AI-assisted stock scanner powered by technical rules")
@@ -121,6 +133,11 @@ def show_scanner():
         "Use the scanner to evaluate selected NSE stocks against the BTST strategy."
     )
 
+    show_buy_candidates = st.sidebar.checkbox(
+        "Show only stocks meeting all conditions",
+        value=True,
+    )
+
     scan_clicked = st.sidebar.button("🚀 Scan Market")
 
     if scan_clicked:
@@ -136,6 +153,13 @@ def show_scanner():
 
         if not results:
             st.warning("No trading opportunities found or data could not be loaded.")
+            return
+
+        if show_buy_candidates:
+            results = filter_buy_candidates(results)
+
+        if not results:
+            st.warning("No stocks met the selected condition set.")
             return
 
         df = make_streamlit_safe(results)
