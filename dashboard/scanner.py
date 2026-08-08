@@ -247,8 +247,14 @@ def show_scanner():
     if st.sidebar.button("Load selected group"):
         st.session_state["scan_symbols"] = combined_groups[group_selection]
 
+    if st.sidebar.button("Load all symbols from file"):
+        st.session_state["scan_symbols"] = default_symbols
+
     if st.sidebar.button("Select all loaded symbols"):
         st.session_state["scan_symbols"] = combined_groups[group_selection]
+
+    if st.sidebar.button("Reset symbol selection"):
+        st.session_state["scan_symbols"] = []
 
     symbols = st.sidebar.multiselect(
         "Symbols to scan",
