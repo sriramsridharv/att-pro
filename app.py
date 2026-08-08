@@ -1,5 +1,10 @@
 import streamlit as st
 from dashboard.home import show_dashboard
+from dashboard.scanner import show_scanner
+from dashboard.indicators import show_indicators
+from dashboard.portfolio import show_portfolio
+from dashboard.reports import show_reports
+from dashboard.settings import show_settings
 
 st.set_page_config(
     page_title="ATT Pro",
@@ -26,21 +31,16 @@ if page == "Dashboard":
     show_dashboard()
 
 elif page == "Scanner":
-    st.title("🔍 Scanner")
-    st.info("Coming Soon")
+    show_scanner()
 
 elif page == "Indicators":
-    st.title("📊 Indicators")
-    st.info("Coming Soon")
+    show_indicators()
 
 elif page == "Portfolio":
-    st.title("💼 Portfolio")
-    st.info("Coming Soon")
+    show_portfolio()
 
 elif page == "Reports":
-    st.title("📄 Reports")
-    st.info("Coming Soon")
+    show_reports()
 
 elif page == "Settings":
-    st.title("⚙️ Settings")
-    st.info("Coming Soon")
+    show_settings()

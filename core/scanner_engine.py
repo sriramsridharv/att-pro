@@ -26,7 +26,7 @@ class ScannerEngine:
         self.risk = RiskEngine()
         self.ranking = RankingEngine()
 
-    def scan_market(self, symbols):
+    def scan_market(self, symbols, period="6mo", interval="1d"):
 
         results = []
 
@@ -37,7 +37,11 @@ class ScannerEngine:
                 # -----------------------------
                 # Download Market Data
                 # -----------------------------
-                df = self.market.get_stock_data(symbol)
+                df = self.market.get_stock_data(
+                    symbol,
+                    period=period,
+                    interval=interval,
+                )
 
                 if df.empty:
                     continue
