@@ -37,6 +37,19 @@ def format_reasons(reasons):
     return str(reasons)
 
 
+def failed_conditions(conditions):
+    if not conditions:
+        return "None"
+
+    failed = [
+        str(condition)
+        for condition, passed in conditions
+        if not passed
+    ]
+
+    return ", ".join(failed) if failed else "None"
+
+
 def make_streamlit_safe(results):
     if not results:
         return pd.DataFrame()
@@ -44,6 +57,7 @@ def make_streamlit_safe(results):
     df = pd.DataFrame(results)
 
     if "Conditions" in df.columns:
+        df["Failed Conditions"] = df["Conditions"].apply(failed_conditions)
         df["Conditions"] = df["Conditions"].apply(format_conditions)
 
     if "Reasons" in df.columns:
@@ -155,8 +169,11 @@ def show_scanner():
             st.warning("No trading opportunities found or data could not be loaded.")
             return
 
+        buy_candidates = filter_buy_candidates(results)
+        non_buy_candidates = [item for item in results if item not in buy_candidates]
+
         if show_buy_candidates:
-            results = filter_buy_candidates(results)
+            results = buy_candidates
 
         if not results:
             st.warning("No stocks met the selected condition set.")
@@ -180,6 +197,16 @@ def show_scanner():
         if "AI Score" in df.columns:
             df = df.sort_values(by="AI Score", ascending=False)
 
+        st.subheader("Buy Candidate List")
+        if buy_candidates:
+            buy_df = make_streamlit_safe(buy_candidates)
+            if "AI Score" in buy_df.columns:
+                buy_df = buy_df.sort_values(by="AI Score", ascending=False)
+            st.dataframe(buy_df, use_container_width=True, hide_index=True)
+        else:
+            st.info("No buy candidates found for the selected symbols and timeframe.")
+
+        st.divider()
         st.subheader("Scanner Results")
         st.dataframe(df, use_container_width=True, hide_index=True)
 
@@ -190,6 +217,22 @@ def show_scanner():
             file_name="attpro_scanner_results.csv",
             mime="text/csv",
         )
+
+        if non_buy_candidates:
+            st.divider()
+            st.subheader("Failed Conditions Summary")
+            failed_summary = []
+            for item in non_buy_candidates:
+                failed_summary.append(
+                    {
+                        "Symbol": item.get("Symbol", "Unknown"),
+                        "Signal": item.get("Signal", "N/A"),
+                        "Failed Conditions": failed_conditions(item.get("Conditions", [])),
+                        "Score": item.get("Score", "N/A"),
+                    }
+                )
+            failed_df = pd.DataFrame(failed_summary)
+            st.dataframe(failed_df, use_container_width=True, hide_index=True)
 
         st.divider()
         st.subheader("Signal Summaries")
