@@ -120,7 +120,7 @@ def show_indicators():
     st.sidebar.title("Indicators Settings")
     symbol = st.sidebar.selectbox("Select Symbol", symbols, index=0)
     period = st.sidebar.selectbox(
-        "Data Period", ["1mo", "3mo", "6mo", "1y", "2y"], index=2
+        "Data Period", ["1mo", "3mo", "6mo", "1y", "2y"], index=0
     )
     interval = st.sidebar.selectbox("Data Interval", ["1d", "1h", "15m"], index=0)
     show_volume = st.sidebar.checkbox("Show Volume Chart", value=True)

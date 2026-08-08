@@ -91,22 +91,68 @@ def show_scanner():
     st.sidebar.title("Scanner Options")
 
     default_symbols = [
-        "RELIANCE.NS",
-        "TCS.NS",
-        "INFY.NS",
-        "HDFCBANK.NS",
-        "ICICIBANK.NS",
-        "SBIN.NS",
-        "BHARTIARTL.NS",
+        "ADANIPORTS.NS",
+        "ASIANPAINT.NS",
         "AXISBANK.NS",
-        "LT.NS",
+        "BAJAJ-AUTO.NS",
+        "BAJFINANCE.NS",
+        "BAJAJFINSV.NS",
+        "BPCL.NS",
+        "BHARTIARTL.NS",
+        "BRITANNIA.NS",
+        "CIPLA.NS",
+        "COALINDIA.NS",
+        "DIVISLAB.NS",
+        "DRREDDY.NS",
+        "EICHERMOT.NS",
+        "GRASIM.NS",
+        "HCLTECH.NS",
+        "HDFC.NS",
+        "HDFCBANK.NS",
+        "HDFCLIFE.NS",
+        "HEROMOTOCO.NS",
+        "HINDALCO.NS",
         "HINDUNILVR.NS",
+        "ICICIBANK.NS",
+        "ITC.NS",
+        "INDUSINDBK.NS",
+        "INFY.NS",
+        "JSWSTEEL.NS",
+        "KOTAKBANK.NS",
+        "LT.NS",
+        "M&M.NS",
+        "MARUTI.NS",
+        "NESTLEIND.NS",
+        "NTPC.NS",
+        "ONGC.NS",
+        "POWERGRID.NS",
+        "RELIANCE.NS",
+        "SBILIFE.NS",
+        "SBIN.NS",
+        "SUNPHARMA.NS",
+        "TCS.NS",
+        "TATACHEM.NS",
+        "TATACONSUM.NS",
+        "TATASTEEL.NS",
+        "TECHM.NS",
+        "TITAN.NS",
+        "ULTRACEMCO.NS",
+        "UPL.NS",
+        "WIPRO.NS",
+        "ZEEL.NS",
     ]
+
+    if "scan_symbols" not in st.session_state:
+        st.session_state["scan_symbols"] = default_symbols[:10]
+
+    if st.sidebar.button("Select all NIFTY50 symbols"):
+        st.session_state["scan_symbols"] = default_symbols
 
     symbols = st.sidebar.multiselect(
         "Symbols to scan",
         default_symbols,
-        default=default_symbols[:5],
+        default=st.session_state["scan_symbols"],
+        key="scan_symbols",
     )
 
     custom_symbol = st.sidebar.text_input(
